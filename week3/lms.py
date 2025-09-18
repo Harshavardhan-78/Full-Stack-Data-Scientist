@@ -3,15 +3,11 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
-# Load .env
 load_dotenv()
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
-# ---------------- CRUD OPERATIONS ---------------- #
-
-# --- Members ---
 def add_member(name, email):
     payload = {"name": name, "email": email}
     return supabase.table("members").insert(payload).execute().data
@@ -23,13 +19,11 @@ def update_member(member_id, new_email):
     return supabase.table("members").update({"email": new_email}).eq("member_id", member_id).execute().data
 
 def delete_member(member_id):
-    # only if no borrowed books
     borrowed = supabase.table("borrow_records").select("*").eq("member_id", member_id).is_("return_date", None).execute().data or []
     if borrowed:
         return {"error": "❌ Member has borrowed books, cannot delete!"}
     return supabase.table("members").delete().eq("member_id", member_id).execute().data
 
-# --- Books ---
 def add_book(title, author, category, stock):
     payload = {"title": title, "author": author, "category": category, "stock": stock}
     return supabase.table("books").insert(payload).execute().data
@@ -46,7 +40,6 @@ def delete_book(book_id):
         return {"error": "❌ Book is currently borrowed, cannot delete!"}
     return supabase.table("books").delete().eq("book_id", book_id).execute().data
 
-# ---------------- SEARCH ---------------- #
 
 def search_books(keyword):
     keyword = keyword.strip()
@@ -66,7 +59,7 @@ def search_books(keyword):
                 results.append(r)
     return results
 
-# ---------------- TRANSACTIONS ---------------- #
+
 
 def borrow_book(member_id, book_id):
     # check stock
@@ -102,7 +95,6 @@ def return_book(record_id):
     except Exception as e:
         return {"error": f"Transaction failed: {e}"}
 
-# ---------------- REPORTS ---------------- #
 
 def report_top_books():
     try:
@@ -127,7 +119,7 @@ def report_member_borrows():
     except Exception:
         return []
 
-# ---------------- MAIN CLI ---------------- #
+
 def print_book(b):
     print(f"[{b.get('book_id')}] {b.get('title')} — {b.get('author')} ({b.get('category')}) | stock: {b.get('stock')}")
 
@@ -226,3 +218,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
